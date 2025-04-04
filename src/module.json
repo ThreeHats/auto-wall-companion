@@ -1,0 +1,19 @@
+{
+  "id": "auto-wall-companion",
+  "title": "Auto Wall Companion",
+  "description": "Enables copy/paste of walls and doors between scenes, and copying the link to the current scene image.",
+  "version": "1.0.1",
+  "authors": [
+      {
+          "name": "ThreeHats",
+          "url": "https://github.com/ThreeHats"
+      }
+  ],
+  "url": "https://github.com/ThreeHats/auto-wall-companion",
+  "bugs": "https://github.com/ThreeHats/auto-wall-companion/issues",
+  "compatibility": {
+    "minimum": "12",
+    "verified": "12"
+  },
+  "esmodules": ["scripts/module.js"]
+}

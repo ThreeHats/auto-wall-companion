@@ -1,0 +1,99 @@
+name: Publish Module
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+permissions:
+  contents: write
+  discussions: write
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Extract tag version number
+        id: get_version
+        uses: battila7/get-version-action@v2
+
+      # Generate release notes with commit links
+      - name: Generate Release Notes
+        id: generate_notes
+        run: |
+          # Get previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          # If no previous tag, get all commits
+          if [ -z "$PREVIOUS_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- [%s](https://github.com/${{ github.repository }}/commit/%H)" --reverse)
+          else
+            COMMITS=$(git log --pretty=format:"- [%s](https://github.com/${{ github.repository }}/commit/%H)" ${PREVIOUS_TAG}..HEAD --reverse)
+          fi
+          
+          # Format release notes
+          FORMATTED_NOTES="## Changes\n${COMMITS}"
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo -e "${FORMATTED_NOTES}" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Run Vite build
+        env:
+          MODULE_VERSION: ${{steps.get_version.outputs.version-without-v}}
+          GH_PROJECT: ${{github.repository}}
+          GH_TAG: ${{github.ref_name}}
+        run: yarn build
+
+      - name: Create zip archive
+        working-directory: dist
+        run: zip -r ./module.zip module.json styles.css scripts/ templates/ languages/
+
+      - name: Create GitHub Release
+        id: create_version_release
+        uses: ncipollo/release-action@v1.16.0
+        with:
+          allowUpdates: false
+          name: Release ${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: "./dist/module.json, ./dist/module.zip"
+          tag: ${{ github.ref_name }}
+          body: ${{ env.RELEASE_NOTES }}
+
+    #   - name: Prepare Foundry VTT API request
+    #     run: |
+    #       # Create a JSON file with the request payload
+    #       cat > foundry_request.json << EOF
+    #       {
+    #         "id": "${{ secrets.PACKAGE_ID }}",
+    #         "release": {
+    #           "version": "${{steps.get_version.outputs.version}}",
+    #           "manifest": "https://github.com/${{github.repository}}/releases/download/${{github.ref_name}}/module.json",
+    #           "notes": "https://github.com/${{github.repository}}/releases/tag/${{github.ref_name}}",
+    #           "compatibility": $(jq -r '.compatibility' dist/module.json)
+    #         }
+    #       }
+    #       EOF
+
+    #   - name: Publish to Foundry VTT
+    #     run: |
+    #       curl -X POST \
+    #         https://api.foundryvtt.com/_api/packages/release_version/ \
+    #         -H "Content-Type: application/json" \
+    #         -H "Authorization: ${{ secrets.FOUNDRY_API_KEY }}" \
+    #         --data @foundry_request.json
