@@ -132,4 +132,4 @@ This module is licensed under the [MIT License](LICENSE).
 
 ## Support
 
-For issues, suggestions, or contributions, please visit the [GitHub repository](https://github.com/yourusername/auto-wall-companion).
+For issues, suggestions, or contributions, please visit the [GitHub repository](https://github.com/ThreeHats/auto-wall-companion).
