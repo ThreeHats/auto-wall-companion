@@ -125,11 +125,6 @@ window.AutoWallCompanion.copySceneImageUrl();
 
 This module is licensed under the [MIT License](LICENSE).
 
-## Credits
-
-- Developed by [Your Name]
-- Special thanks to the Foundry VTT community
-
 ## Support
 
 For issues, suggestions, or contributions, please visit the [GitHub repository](https://github.com/ThreeHats/auto-wall-companion).
