@@ -2,7 +2,7 @@
 
 A [Foundry VTT](https://foundryvtt.com) module that enhances wall management by providing tools to import, export, and manage walls.
 
-![Auto Wall Tools](https://i.imgur.com/placeholder-image.png)
+[Discord server](https://discord.gg/HUzEnZy8uJ) 
 
 ## Features
 
