@@ -15,7 +15,6 @@ A [Foundry VTT](https://foundryvtt.com) module that enhances wall management by 
 - **Batch Processing**: Handles large wall collections efficiently
 
 ## Installation
-## Installation
 
 You can install the module using one of the following methods:
 
