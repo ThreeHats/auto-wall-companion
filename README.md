@@ -1,112 +1,140 @@
-# Foundry Module Bundler
+# Auto Wall Companion
 
-A Foundry VTT module that allows you to create and share bundles of modules across Foundry instances.
+A [Foundry VTT](https://foundryvtt.com) module that enhances wall management by providing tools to import, export, and manage walls.
 
-![Foundry V12 Compatible](https://img.shields.io/badge/Foundry-v12-green)
-![Alpha Status](https://img.shields.io/badge/Status-Alpha-orange)
-
-## Overview
-
-Foundry Module Bundler solves the problem of sharing your module setup with friends, other GMs, or across multiple Foundry instances. With a few clicks, you can:
-
-1. Create a bundle of all your active modules (or all installed modules)
-2. Share a single manifest URL that will install all publicly available modules
-3. Download a zip file of any modules that couldn't be found online **not for distribution**
-
-# Important Notes
-
-⚠️ **IMPORTANT: Always back up your worlds before installing multiple modules at once!**
-
-- The bundler only works with **publicly available non-premium modules**
-- Premium modules and those not publicly available will be offered for local download instead (still in development)
-- If a required module is already installed in your Foundry instance, the bundled version will **not** overwrite it
-- Large modules (with "compendium" or "jb2a" in their name) are automatically excluded from local packaging currently, and local zipping may still take a very long while to finish. See the console for info.
-- At the moment there are no loading screens or progress indicators. The bundling process may take some time for larger bundles. Be patient and eventually the dialogue should show back up with the results.
+![Auto Wall Tools](https://i.imgur.com/placeholder-image.png)
 
 ## Features
 
-- **Module Bundle Creation**: Generate a shareable manifest URL containing all your selected modules
-- **Intelligent Module Processing**: Automatically determines which modules are publicly available and finds the exact same version (or one verified to be equivalent)
-- **Selective Module Inclusion**: Choose between bundling all installed modules or just active ones
-- **Local Module Downloading**: For modules that can't be found online, download them as a zip package
-- **Dependency Management**: Automatically ensures dependencies are valid in the bundle
-
-
-## Usage
-
-1. Click the box button added in the token scene controls.
-2. Choose all or active modules, And click prepare bundle.
-3. After the bundle has been created by the server, a dialogue will show up detailing the results and providing the manifest link.
-4. Use the provided manifest link to install the bundle in foundry. For large bundles this will take some time to display the auto install screen.
-5. Only install the dependencies of the bundle. Do not allow foundry to auto install other dependencies as their versions may be different.
+- **Wall Import/Export**: Easily transfer walls between scenes or share them with others
+  - Import walls from JSON files or clipboard
+  - Export walls to JSON files or clipboard
+- **Scene Image URL**: Copy the current scene's background image URL with one click
+- **Integrated UI**: Adds tools directly to Foundry's wall controls panel
+- **Padding Protection**: Warns when scene padding might affect wall positioning
+- **Batch Processing**: Handles large wall collections efficiently
 
 ## Installation
+## Installation
 
+You can install the module using one of the following methods:
 
-### Method 1: Manual Installation
+### Method 1: Install from Foundry VTT
 
-1. Download the latest release from [Releases](https://github.com/yourusername/foundry-module-bundler/releases)
-2. Extract the zip file
-3. Move the extracted folder to your Foundry `Data/modules/` directory
-4. Restart Foundry and enable the module
+1. Open Foundry VTT and navigate to the "Add-on Modules" tab in the setup screen.
+2. Click "Install Module."
+3. Search for "Auto Wall Companion" in the module browser and click "Install."
+
+### Method 2: Use the Manifest Link
+
+1. In the Foundry VTT setup screen, go to the "Add-on Modules" tab.
+2. Click "Install Module."
+3. Paste the manifest URL from the latest release:
+    ```
+    https://github.com/ThreeHats/auto-wall-companion/releases/latest/download/module.json
+    ```
+4. Click "Install."
+
+### Method 3: Manual Installation
+
+1. Download the [latest release](https://github.com/yourusername/auto-wall-companion/releases).
+2. Extract the zip file to your Foundry VTT `Data/modules/` folder.
+3. Rename the folder to `auto-wall-companion` (if necessary).
+4. Restart Foundry VTT.
 
 ## Usage
 
-1. Go to the Foundry setup or game and enable the Module Bundler module
-2. Click the "Create Module Bundle" button in the module settings
-3. Choose whether to include all modules or just active ones
-4. Wait for the module to analyze your modules and prepare the bundle
-5. Copy the generated manifest URL to share with others
-6. Optionally download any modules that couldn't be found online
+### Accessing the Tools
 
-### Method 2: Building From Source
+1. Open a scene in Foundry VTT
+2. Select the Walls Tool in the left toolbar
+3. Find the "Wall Import/Export" and "Copy Scene Image URL" buttons in the walls submenu
 
-If you want to build the module from source:
+### Importing Walls
 
-1. Clone this repository
-2. Install dependencies with:
-   ```bash
-   npm install
-   # or
-   pnpm install
-   ```
-3. Build the module with:
-   ```bash
-   npm run build
-   # or
-   pnpm build
-   ```
-4. For development with auto-reload:
-   ```bash
-   npm run dev
-   # or
-   pnpm dev
-   ```
+Two methods are available for importing walls:
 
-The `dev` command will automatically try to place the built module into your Foundry VTT modules directory for immediate testing.
+1. **From Clipboard**:
+   - Copy wall JSON to your clipboard
+   - Click the "Wall Import/Export" button
+   - Select "Import from Clipboard"
 
-## Alpha Status
+2. **From File**:
+   - Click the "Wall Import/Export" button
+   - Select "Import from File"
+   - Choose your wall JSON file
 
-⚠️ **This module is currently in ALPHA status.**
+### Exporting Walls
 
-- Expect bugs and unfinished features
-- Some modules may not be handled correctly in this early version
-- Please [report issues](https://github.com/yourusername/foundry-module-bundler/issues) you encounter
-- Use at your own risk
+Two methods are available for exporting walls:
 
-## Future Plans
+1. **To Clipboard**:
+   - Click the "Wall Import/Export" button
+   - Select "Export to Clipboard"
+   - The wall data will be copied to your clipboard as JSON
 
-This will be a large project, and and there are many things to consider. I believe this utility has great potential, but there are inherant risks involved with enabling (and therefore encouraging) quickly and completely changing your worlds. As such I want this project to be ready for those kinds of risks before allowing anyone but testers to use the system.
+2. **To File**:
+   - Click the "Wall Import/Export" button
+   - Select "Export to File"
+   - The wall data will be saved as a JSON file named after your scene
 
-The current plans for the final product include:
-- A dedicated website with comprehensive pages for each bundle and **many** warnings
-- Trusted verification of bundles by admins and moderators
-- In-Foundry and on-website bug reporting (so bundle bugs are seperate to the modules included)
-- Integrated forums
-- Statistics and analytics for popular module combinations (when we get there)
+### Scene Image URL
 
-## Troubleshooting
+- Click the "Copy Scene Image URL" button in the walls tool submenu
+- The background image URL will be copied to your clipboard
 
-- If module bundling fails to get a module you believe it should have, wait a few minutes and try again. If any public non-premium module is still missed please open an issue with the copied and pasted missing modules.
-- Some modules with unusual file structures may not zip correctly.
-- Large modules may timeout during processing and will be entirely or partially skipped when zipping.
+## Important Notes
+
+### Scene Padding
+
+For accurate wall positioning, it's recommended to set scene padding to 0 before importing or exporting walls. If padding is not 0, the module will warn you before proceeding.
+
+To adjust scene padding:
+1. Right-click on your scene in the Scenes panel
+2. Select "Configure"
+3. In the scene configuration, set "Padding" to 0
+4. Save changes
+
+## Configuration
+
+The module includes settings for log level control, accessible in the Module Settings.
+
+## For Developers
+
+### Using the API
+
+The module exposes functions on the global `AutoWallCompanion` object:
+
+```javascript
+// Import walls from clipboard
+window.AutoWallCompanion.importWallsFromClipboard();
+
+// Import walls from file
+window.AutoWallCompanion.importWallsFromFile();
+
+// Export walls to clipboard
+window.AutoWallCompanion.exportWallsToClipboard();
+
+// Export walls to file
+window.AutoWallCompanion.exportWallsToFile();
+
+// Copy scene image URL
+window.AutoWallCompanion.copySceneImageUrl();
+```
+
+## Compatibility
+
+- Foundry VTT: v10 or higher
+
+## License
+
+This module is licensed under the [MIT License](LICENSE).
+
+## Credits
+
+- Developed by [Your Name]
+- Special thanks to the Foundry VTT community
+
+## Support
+
+For issues, suggestions, or contributions, please visit the [GitHub repository](https://github.com/yourusername/auto-wall-companion).

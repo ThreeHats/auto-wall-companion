@@ -38,7 +38,7 @@ Hooks.once('ready', () => {
   ModuleLogger.info('Module ready');
   
   // Register module to the global window object for macro use - do this in ready hook
-  (window as any).ModuleBundler = {
+  (window as any).AutoWallCompanion = {
     importWallsFromClipboard: WallUtils.importWallsFromClipboard.bind(WallUtils),
     importWallsFromFile: WallUtils.importWallsFromFile.bind(WallUtils),
     exportWallsToClipboard: WallUtils.exportWallsToClipboard.bind(WallUtils),
