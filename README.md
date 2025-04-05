@@ -121,10 +121,6 @@ window.AutoWallCompanion.exportWallsToFile();
 window.AutoWallCompanion.copySceneImageUrl();
 ```
 
-## Compatibility
-
-- Foundry VTT: v10 or higher
-
 ## License
 
 This module is licensed under the [MIT License](LICENSE).
