@@ -43,7 +43,8 @@ Hooks.once('ready', () => {
     importWallsFromFile: WallUtils.importWallsFromFile.bind(WallUtils),
     exportWallsToClipboard: WallUtils.exportWallsToClipboard.bind(WallUtils),
     exportWallsToFile: WallUtils.exportWallsToFile.bind(WallUtils),
-    copySceneImageUrl: WallUtils.copySceneImageUrl.bind(WallUtils)
+    copySceneImageUrl: WallUtils.copySceneImageUrl.bind(WallUtils),
+    exportSceneTilesAsImage: WallUtils.exportSceneTilesAsImage.bind(WallUtils)
   };
 });
 
@@ -79,6 +80,20 @@ Hooks.on('getSceneControlButtons', function (controls: any[]) {
         icon: "fas fa-image",
         onClick: () => {
           WallUtils.copySceneImageUrl();
+        },
+        button: true
+      });
+    }
+    
+    // Add the export tiles button
+    const hasExportTiles = wallsControl.tools.some((t: { name: string }) => t.name === "export-tiles");
+    if (!hasExportTiles) {
+      wallsControl.tools.push({
+        name: "export-tiles",
+        title: "Export Tiles as Image",
+        icon: "fas fa-th-large",
+        onClick: () => {
+          WallUtils.exportSceneTilesAsImage();
         },
         button: true
       });
@@ -302,6 +317,183 @@ export class WallUtils {
     } catch (error) {
       console.error("Error copying scene image URL:", error);
       ui.notifications?.error("Error copying image URL:" + (error instanceof Error ? error.message : String(error)));
+    }
+  }
+
+  /**
+   * Export all tiles in the current scene as a single image
+   */
+  static async exportSceneTilesAsImage(): Promise<void> {
+    try {
+      // Get the current scene
+      const scene = (game as Game).scenes?.current;
+      if (!scene) {
+        ui.notifications?.error("No active scene found.");
+        return;
+      }
+
+      // Check if there are any tiles
+      const tiles = scene.tiles.contents;
+      if (!tiles || tiles.length === 0) {
+        ui.notifications?.warn("The current scene has no tiles to export.");
+        return;
+      }
+
+      // Create a canvas to combine all tiles
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        ui.notifications?.error("Unable to create canvas context for tile export.");
+        return;
+      }
+
+      // Show progress notification
+      ui.notifications?.info(`Preparing to export ${tiles.length} tiles...`);
+
+      // Calculate the bounds of all tiles to determine canvas size
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      
+      // First pass: determine canvas size based on all tile positions and dimensions
+      for (const tile of tiles) {
+        const tileData = (tile as any);
+        // Access properties safely with fallbacks
+        const tileWidth = tileData.width || tileData.document?.width || 0;
+        const tileHeight = tileData.height || tileData.document?.height || 0;
+        const tileX = tileData.x || tileData.document?.x || 0;
+        const tileY = tileData.y || tileData.document?.y || 0;
+        
+        minX = Math.min(minX, tileX);
+        minY = Math.min(minY, tileY);
+        maxX = Math.max(maxX, tileX + tileWidth);
+        maxY = Math.max(maxY, tileY + tileHeight);
+      }
+
+      // Ensure we have valid dimensions (add 1px padding if needed)
+      if (maxX <= minX) maxX = minX + 1;
+      if (maxY <= minY) maxY = minY + 1;
+      
+      // Set canvas dimensions to contain all tiles
+      const canvasWidth = Math.ceil(maxX - minX);
+      const canvasHeight = Math.ceil(maxY - minY);
+      
+      // Check for excessively large canvas dimensions
+      const MAX_DIMENSION = 16384; // Most browsers' maximum canvas size
+      if (canvasWidth > MAX_DIMENSION || canvasHeight > MAX_DIMENSION) {
+        ui.notifications?.error(`Canvas size too large (${canvasWidth}x${canvasHeight}). Maximum supported dimensions are ${MAX_DIMENSION}x${MAX_DIMENSION}.`);
+        return;
+      }
+      
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      
+      // Fill with transparent background
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+      // Load and draw all tiles - using a more reliable approach
+      let loadedCount = 0;
+      let failedCount = 0;
+      
+      ui.notifications?.info(`Loading tile images...`);
+      
+      // Process tiles in sequence to ensure proper rendering order
+      for (const tile of tiles) {
+        try {
+          const tileData = (tile as any);
+          // Access key properties with fallbacks
+          const tileWidth = tileData.width || tileData.document?.width || 0;
+          const tileHeight = tileData.height || tileData.document?.height || 0;
+          const tileX = tileData.x || tileData.document?.x || 0;
+          const tileY = tileData.y || tileData.document?.y || 0;
+          
+          // Find the texture path
+          let textureSrc = null;
+          if (tileData.texture?.src) {
+            textureSrc = tileData.texture.src;
+          } else if (tileData.document?.texture?.src) {
+            textureSrc = tileData.document.texture.src;
+          } else if (tileData.img) {
+            textureSrc = tileData.img;
+          } else if (tileData.document?.img) {
+            textureSrc = tileData.document.img;
+          }
+          
+          if (!textureSrc) {
+            ModuleLogger.warn(`Tile doesn't have a valid texture source`);
+            failedCount++;
+            continue;
+          }
+          
+          // Load the image
+          await new Promise<void>((resolve) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            
+            img.onload = () => {
+              try {
+                // Draw the image at its position, adjusted by the minimum bounds
+                ctx.drawImage(
+                  img,
+                  0, 0, img.width, img.height,
+                  tileX - minX, tileY - minY, tileWidth, tileHeight
+                );
+                loadedCount++;
+                resolve();
+              } catch (err) {
+                ModuleLogger.warn(`Error drawing tile image: ${err}`);
+                failedCount++;
+                resolve();
+              }
+            };
+            
+            img.onerror = () => {
+              ModuleLogger.warn(`Failed to load tile image: ${textureSrc}`);
+              failedCount++;
+              resolve();
+            };
+            
+            img.src = textureSrc;
+          });
+        } catch (err) {
+          ModuleLogger.warn(`Error processing tile: ${err}`);
+          failedCount++;
+        }
+      }
+
+      // Status update before export
+      if (failedCount > 0) {
+        ui.notifications?.warn(`${failedCount} tiles could not be loaded or drawn.`);
+      }
+      
+      try {
+        // Convert canvas to blob
+        const blob = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob(resolve, 'image/png');
+        });
+        
+        if (!blob) {
+          ui.notifications?.error("Failed to create image blob.");
+          return;
+        }
+        
+        // Generate file name
+        const sceneName = scene.name?.replace(/\s+/g, "_") || "scene";
+        const fileName = `${sceneName}_tiles.png`;
+        
+        // Create a File object
+        const file = new File([blob], fileName, { type: "image/png" });
+        
+        // Create download link using FileSaver API
+        const FileSaver = (await import('file-saver')).default;
+        FileSaver.saveAs(file, fileName);
+        
+        ui.notifications?.info(`Scene tiles exported successfully (${loadedCount} tiles).`);
+      } catch (exportErr) {
+        console.error("Image export error:", exportErr);
+        ui.notifications?.error(`Failed to export image: ${exportErr instanceof Error ? exportErr.message : String(exportErr)}`);
+      }
+    } catch (error) {
+      console.error("Error exporting scene tiles:", error);
+      ui.notifications?.error("Error exporting scene tiles: " + (error instanceof Error ? error.message : String(error)));
     }
   }
 }

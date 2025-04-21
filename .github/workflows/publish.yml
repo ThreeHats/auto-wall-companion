@@ -75,25 +75,25 @@ jobs:
           tag: ${{ github.ref_name }}
           body: ${{ env.RELEASE_NOTES }}
 
-    #   - name: Prepare Foundry VTT API request
-    #     run: |
-    #       # Create a JSON file with the request payload
-    #       cat > foundry_request.json << EOF
-    #       {
-    #         "id": "${{ secrets.PACKAGE_ID }}",
-    #         "release": {
-    #           "version": "${{steps.get_version.outputs.version}}",
-    #           "manifest": "https://github.com/${{github.repository}}/releases/download/${{github.ref_name}}/module.json",
-    #           "notes": "https://github.com/${{github.repository}}/releases/tag/${{github.ref_name}}",
-    #           "compatibility": $(jq -r '.compatibility' dist/module.json)
-    #         }
-    #       }
-    #       EOF
+      - name: Prepare Foundry VTT API request
+        run: |
+          # Create a JSON file with the request payload
+          cat > foundry_request.json << EOF
+          {
+            "id": "${{ secrets.PACKAGE_ID }}",
+            "release": {
+              "version": "${{steps.get_version.outputs.version}}",
+              "manifest": "https://github.com/${{github.repository}}/releases/download/${{github.ref_name}}/module.json",
+              "notes": "https://github.com/${{github.repository}}/releases/tag/${{github.ref_name}}",
+              "compatibility": $(jq -r '.compatibility' dist/module.json)
+            }
+          }
+          EOF
 
-    #   - name: Publish to Foundry VTT
-    #     run: |
-    #       curl -X POST \
-    #         https://api.foundryvtt.com/_api/packages/release_version/ \
-    #         -H "Content-Type: application/json" \
-    #         -H "Authorization: ${{ secrets.FOUNDRY_API_KEY }}" \
-    #         --data @foundry_request.json
+      - name: Publish to Foundry VTT
+        run: |
+          curl -X POST \
+            https://api.foundryvtt.com/_api/packages/release_version/ \
+            -H "Content-Type: application/json" \
+            -H "Authorization: ${{ secrets.FOUNDRY_API_KEY }}" \
+            --data @foundry_request.json
