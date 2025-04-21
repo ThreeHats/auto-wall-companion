@@ -354,6 +354,7 @@ export class WallUtils {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       
       // First pass: determine canvas size based on all tile positions and dimensions
+      // This is more complex with rotation - we need to calculate the bounding box of rotated tiles
       for (const tile of tiles) {
         const tileData = (tile as any);
         // Access properties safely with fallbacks
@@ -361,11 +362,52 @@ export class WallUtils {
         const tileHeight = tileData.height || tileData.document?.height || 0;
         const tileX = tileData.x || tileData.document?.x || 0;
         const tileY = tileData.y || tileData.document?.y || 0;
+        const rotation = tileData.rotation || tileData.document?.rotation || 0;
         
-        minX = Math.min(minX, tileX);
-        minY = Math.min(minY, tileY);
-        maxX = Math.max(maxX, tileX + tileWidth);
-        maxY = Math.max(maxY, tileY + tileHeight);
+        // If no rotation, use simple bounds calculation
+        if (rotation === 0) {
+          minX = Math.min(minX, tileX);
+          minY = Math.min(minY, tileY);
+          maxX = Math.max(maxX, tileX + tileWidth);
+          maxY = Math.max(maxY, tileY + tileHeight);
+          continue;
+        }
+        
+        // For rotated tiles, calculate the corners after rotation
+        // Convert rotation to radians (Foundry uses degrees)
+        const radians = (rotation * Math.PI) / 180;
+        
+        // Calculate the center of the tile (rotation pivot)
+        const centerX = tileX + tileWidth / 2;
+        const centerY = tileY + tileHeight / 2;
+        
+        // Calculate the four corners of the tile (relative to center)
+        const halfWidth = tileWidth / 2;
+        const halfHeight = tileHeight / 2;
+        
+        const corners = [
+          { x: -halfWidth, y: -halfHeight }, // top-left
+          { x: halfWidth, y: -halfHeight },  // top-right
+          { x: halfWidth, y: halfHeight },   // bottom-right
+          { x: -halfWidth, y: halfHeight }   // bottom-left
+        ];
+        
+        // Rotate each corner and find the new bounds
+        corners.forEach(corner => {
+          // Apply rotation matrix
+          const rotatedX = corner.x * Math.cos(radians) - corner.y * Math.sin(radians);
+          const rotatedY = corner.x * Math.sin(radians) + corner.y * Math.cos(radians);
+          
+          // Add center offset to get absolute position
+          const absoluteX = centerX + rotatedX;
+          const absoluteY = centerY + rotatedY;
+          
+          // Update bounds
+          minX = Math.min(minX, absoluteX);
+          minY = Math.min(minY, absoluteY);
+          maxX = Math.max(maxX, absoluteX);
+          maxY = Math.max(maxY, absoluteY);
+        });
       }
 
       // Ensure we have valid dimensions (add 1px padding if needed)
@@ -404,6 +446,7 @@ export class WallUtils {
           const tileHeight = tileData.height || tileData.document?.height || 0;
           const tileX = tileData.x || tileData.document?.x || 0;
           const tileY = tileData.y || tileData.document?.y || 0;
+          const rotation = tileData.rotation || tileData.document?.rotation || 0;
           
           // Find the texture path
           let textureSrc = null;
@@ -430,12 +473,28 @@ export class WallUtils {
             
             img.onload = () => {
               try {
+                // Save the current canvas state
+                ctx.save();
+                
+                // Calculate center of tile (rotation pivot)
+                const centerX = tileX - minX + tileWidth / 2;
+                const centerY = tileY - minY + tileHeight / 2;
+                
+                // Move to the center, rotate, and move back
+                ctx.translate(centerX, centerY);
+                ctx.rotate((rotation * Math.PI) / 180); // Convert degrees to radians
+                ctx.translate(-centerX, -centerY);
+                
                 // Draw the image at its position, adjusted by the minimum bounds
                 ctx.drawImage(
                   img,
                   0, 0, img.width, img.height,
                   tileX - minX, tileY - minY, tileWidth, tileHeight
                 );
+                
+                // Restore the canvas state
+                ctx.restore();
+                
                 loadedCount++;
                 resolve();
               } catch (err) {
