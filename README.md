@@ -2,7 +2,7 @@
 
 A [Foundry VTT](https://foundryvtt.com) module that enhances wall management by providing tools to import, export, and manage walls.
 
-![Auto Wall Tools](https://i.imgur.com/placeholder-image.png)
+[Discord server](https://discord.gg/HUzEnZy8uJ) 
 
 ## Features
 
@@ -124,11 +124,6 @@ window.AutoWallCompanion.copySceneImageUrl();
 ## License
 
 This module is licensed under the [MIT License](LICENSE).
-
-## Credits
-
-- Developed by [Your Name]
-- Special thanks to the Foundry VTT community
 
 ## Support
 
