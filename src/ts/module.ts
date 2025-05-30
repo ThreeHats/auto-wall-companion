@@ -3,6 +3,13 @@ import { moduleId } from './constants';
 import { WallManagementDialog } from './wall-management-dialog';
 
 /**
+ * Get the Foundry VTT version number
+ */
+function getFoundryVersion(): string {
+  return (game as Game).version;
+}
+
+/**
  * Initialize the module
  */
 Hooks.once('init', () => {
@@ -51,52 +58,115 @@ Hooks.once('ready', () => {
 /**
  * Add buttons to the walls submenu using getSceneControlButtons
  */
-Hooks.on('getSceneControlButtons', function (controls: any[]) {
-  // Find the walls control group
-  const wallsControl = controls.find(c => c.name === "walls");
+Hooks.on('getSceneControlButtons', function (controls: any) {
+  console.log(controls)
   
-  if (wallsControl && wallsControl.tools) {
-    // Check if our buttons already exist to prevent duplicates
-    const hasWallManagement = wallsControl.tools.some((t: { name: string }) => t.name === "wall-management");
-    const hasCopyImage = wallsControl.tools.some((t: { name: string }) => t.name === "copy-scene-image");
+  const foundryVersion = getFoundryVersion();
+  const majorVersion = parseInt(foundryVersion.split('.')[0]);
+  
+  // Find the walls control group - handle both array and object structures
+  let wallsControl;
+  if (Array.isArray(controls)) {
+    // Pre-v13: controls is an array
+    wallsControl = controls.find(c => c.name === "walls");
+  } else {
+    // v13+: controls is an object
+    wallsControl = controls.walls;
+  }
+  
+  if (!wallsControl) return;
+  
+  // Handle different Foundry versions
+  if (majorVersion >= 13) {
+    // In v13+, tools is an object, not an array
+    if (!wallsControl.tools) {
+      wallsControl.tools = {};
+    }
     
-    // Only add buttons if they don't already exist
-    if (!hasWallManagement) {
-      wallsControl.tools.push({
+    // Add tools if they don't already exist
+    if (!wallsControl.tools["wall-management"]) {
+      wallsControl.tools["wall-management"] = {
         name: "wall-management",
         title: "Wall Import/Export",
         icon: "fas fa-exchange-alt",
         onClick: () => {
           new WallManagementDialog().render(true);
         },
-        button: true
-      });
+        button: true,
+        order: 20
+      };
     }
     
-    if (!hasCopyImage) {
-      wallsControl.tools.push({
+    if (!wallsControl.tools["copy-scene-image"]) {
+      wallsControl.tools["copy-scene-image"] = {
         name: "copy-scene-image",
         title: "Copy Scene Image URL",
         icon: "fas fa-image",
         onClick: () => {
           WallUtils.copySceneImageUrl();
         },
-        button: true
-      });
+        button: true,
+        order: 21
+      };
     }
     
-    // Add the export tiles button
-    const hasExportTiles = wallsControl.tools.some((t: { name: string }) => t.name === "export-tiles");
-    if (!hasExportTiles) {
-      wallsControl.tools.push({
+    if (!wallsControl.tools["export-tiles"]) {
+      wallsControl.tools["export-tiles"] = {
         name: "export-tiles",
         title: "Export Tiles as Image",
         icon: "fas fa-th-large",
         onClick: () => {
           WallUtils.exportSceneTilesAsImage();
         },
-        button: true
-      });
+        button: true,
+        order: 22
+      };
+    }
+  } else {
+    // Pre-v13 behavior - tools is an array
+    if (wallsControl.tools && Array.isArray(wallsControl.tools)) {
+      // Check if our buttons already exist to prevent duplicates
+      const hasWallManagement = wallsControl.tools.some((t: { name: string }) => t.name === "wall-management");
+      const hasCopyImage = wallsControl.tools.some((t: { name: string }) => t.name === "copy-scene-image");
+      
+      // Only add buttons if they don't already exist
+      if (!hasWallManagement) {
+        wallsControl.tools.push({
+          name: "wall-management",
+          title: "Wall Import/Export",
+          icon: "fas fa-exchange-alt",
+          onClick: () => {
+            new WallManagementDialog().render(true);
+          },
+          button: true
+        });
+      }
+      
+      if (!hasCopyImage) {
+        wallsControl.tools.push({
+          name: "copy-scene-image",
+          title: "Copy Scene Image URL",
+          icon: "fas fa-image",
+          onClick: () => {
+            WallUtils.copySceneImageUrl();
+          },
+          button: true
+        });
+      }
+      
+      // Add the export tiles button
+      const hasExportTiles = wallsControl.tools.some((t: { name: string }) => t.name === "export-tiles");
+      if (!hasExportTiles) {
+        wallsControl.tools.push({
+          name: "export-tiles",
+          title: "Export Tiles as Image",
+          icon: "fas fa-th-large",
+          onClick: () => {
+            WallUtils.exportSceneTilesAsImage();
+          },
+          button: true
+        });
+      }
     }
   }
 });

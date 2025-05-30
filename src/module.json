@@ -12,8 +12,8 @@
   "url": "https://github.com/ThreeHats/auto-wall-companion",
   "bugs": "https://github.com/ThreeHats/auto-wall-companion/issues",
   "compatibility": {
-    "minimum": "12",
-    "verified": "12"
+    "minimum": "11",
+    "verified": "13"
   },
   "esmodules": ["scripts/module.js"]
 }

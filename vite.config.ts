@@ -21,6 +21,28 @@ const foundryVttDataPath = path.join(
   "modules"
 );
 
+// const foundryVttDataPath = path.join(
+//   "C:",
+//   "Users",
+//   "Noah",
+//   "Documents",
+//   "foundry-v13",
+//   "data",
+//   "Data",
+//   "modules"
+// );
+
+// const foundryVttDataPath = path.join(
+//   "C:",
+//   "Users",
+//   "Noah",
+//   "Documents",
+//   "foundry-v11",
+//   "data",
+//   "Data",
+//   "modules"
+// );
+
 // Ensure the Foundry VTT modules directory exists
 async function ensureDirectory(directoryPath) {
   try {
